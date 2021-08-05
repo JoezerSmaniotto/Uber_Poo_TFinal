@@ -18,11 +18,11 @@ public class HomeController {
 		do {
 			System.out.print("\n-------  Home -------");
 			System.out.print(		
-				"\n1. Vender" +
-				"\n2. Manter Veículo" +
-				"\n3. Manter Usuário" +
-				"\n4. Manter Motorista" +
-				"\n5. Manter Corrida" +
+				
+				"\n1. Manter Veículo" +
+				"\n2. Manter Usuário" +
+				"\n3. Manter Motorista" +
+				"\n4. Manter Corrida" +
 				"\nOpção (Zero p/sair): ");
 			opcao = input.nextInt();
 			input.nextLine();

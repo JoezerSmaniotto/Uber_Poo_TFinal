@@ -14,14 +14,15 @@ import model.Veiculo;
 public class VeiculoDAO extends BaseDAO{
 	
 	public static List<Veiculo> selectVeiculos() {
-		final String sql = "SELECT * FROM veiculos ORDER BY tipo";
+		final String sql = "SELECT * FROM veiculos where situacao=? ORDER BY tipo";
 		try //try-witch-resource
 			(
 				Connection conn = getConnection();
 				PreparedStatement pstmt = conn.prepareStatement(sql);
-				ResultSet rs = pstmt.executeQuery();
 			)
 		{
+			pstmt.setBoolean(1, true);	
+			ResultSet rs = pstmt.executeQuery();
 			List<Veiculo> veiculos = new ArrayList<>();
 			while(rs.next()) {
 				veiculos.add(resultsetToVeiculo(rs));
@@ -35,7 +36,7 @@ public class VeiculoDAO extends BaseDAO{
 	
 	
 	public static List<Veiculo> selectVeiculosByTipo(String tipo) {
-		final String sql = "SELECT * FROM veiculos WHERE tipo LIKE ? ORDER BY tipo";
+		final String sql = "SELECT * FROM veiculos WHERE tipo LIKE ? and situacao=? ORDER BY tipo";
 		try //try-witch-resource
 			(
 				Connection conn = getConnection();
@@ -43,6 +44,7 @@ public class VeiculoDAO extends BaseDAO{
 			)
 		{
 			pstmt.setString(1, "%" + tipo.toLowerCase() + "%");	
+			pstmt.setBoolean(2, true);	
 			ResultSet rs = pstmt.executeQuery();
 			List<Veiculo> veiculos = new ArrayList<>();
 			while(rs.next()) {
@@ -78,15 +80,38 @@ public class VeiculoDAO extends BaseDAO{
 	}
 	
 	
+	public static List<Veiculo> selectVeiculosInativos() {
+		final String sql = "SELECT * FROM veiculos WHERE situacao=?";
+		try //try-witch-resource
+			(
+				Connection conn = getConnection();
+				PreparedStatement pstmt = conn.prepareStatement(sql);
+			)
+		{
+			pstmt.setBoolean(1, false);	
+			ResultSet rs = pstmt.executeQuery();
+			List<Veiculo> veiculos = new ArrayList<>();
+			while(rs.next()) {
+				veiculos.add(resultsetToVeiculo(rs));
+			}
+			return veiculos;
+		} catch(SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
 	public static Veiculo selectVeiculoById(Long id) {
-		final String sql = "SELECT * FROM veiculos WHERE idVeiculo=?";
+		final String sql = "SELECT * FROM veiculos WHERE idVeiculo=? and situacao=?";
 		try
 		(
 			Connection conn = getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql);
 		)
 		{
-			pstmt.setLong(1, id);	
+			pstmt.setLong(1, id);
+			pstmt.setBoolean(2, true);	
 			ResultSet rs = pstmt.executeQuery();
 			Veiculo veiculo = null;
 			if(rs.next()) {

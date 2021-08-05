@@ -10,7 +10,7 @@ import java.util.Calendar;
 import java.sql.*;
 
 import model.Motorista;
-import model.Motorista;
+
 
 import dao.VeiculoDAO;
 import model.Veiculo;
@@ -20,16 +20,19 @@ public class MotoristaDAO extends BaseDAO {
 	
 	public static List<Motorista> selectMotoristas() {
 		final String sql = "SELECT * FROM motoristas ORDER BY nome";
+		
 		try //try-witch-resource
 			(
 				Connection conn = getConnection();
 				PreparedStatement pstmt = conn.prepareStatement(sql);
 				ResultSet rs = pstmt.executeQuery();
+				
 			)
 		{
+			
 			List<Motorista> motoristas = new ArrayList<>();
 			while(rs.next()) {
-				motoristas.add(resultsetToUsuario(rs));
+				motoristas.add(resultsetMotorista(rs));
 			}
 			return motoristas;
 		} catch(SQLException e) {
@@ -38,9 +41,33 @@ public class MotoristaDAO extends BaseDAO {
 		}
 	}
 	
+	
+	public static List<Motorista> selectMotoristasInativos() {
+		final String sql = "SELECT * FROM motoristas where situacao=? ORDER BY nome";
+		try //try-witch-resource
+			(
+				Connection conn = getConnection();
+				PreparedStatement pstmt = conn.prepareStatement(sql);
+				
+			)
+		{
+			pstmt.setBoolean(1, false);
+			ResultSet rs = pstmt.executeQuery();
+			List<Motorista> motoristas = new ArrayList<>();
+			while(rs.next()) {
+				motoristas.add(resultsetMotorista(rs));
+			}
+			return motoristas;
+		} catch(SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
 								
 	public static List<Motorista> selectMotoristasByNome(String nome) {
-		final String sql = "SELECT * FROM motoristas WHERE nome LIKE ? ORDER BY nome";
+		final String sql = "SELECT * FROM motoristas WHERE nome LIKE ? and  situacao=? ORDER BY nome";
 		try //try-witch-resource
 			(
 				Connection conn = getConnection();
@@ -48,10 +75,11 @@ public class MotoristaDAO extends BaseDAO {
 			)
 		{
 			pstmt.setString(1, "%" + nome.toLowerCase() + "%");	
+			pstmt.setBoolean(2, true);
 			ResultSet rs = pstmt.executeQuery();
 			List<Motorista> motoristas = new ArrayList<>();
 			while(rs.next()) {
-				motoristas.add(resultsetToUsuario(rs));
+				motoristas.add(resultsetMotorista(rs));
 			}
 			return motoristas;
 		} catch(SQLException e) {
@@ -73,7 +101,7 @@ public class MotoristaDAO extends BaseDAO {
 			ResultSet rs = pstmt.executeQuery();
 			List<Motorista> motoristas = new ArrayList<>();
 			while(rs.next()) {
-				motoristas.add(resultsetToUsuario(rs));
+				motoristas.add(resultsetMotorista(rs));
 			}
 			return motoristas;
 		} catch(SQLException e) {
@@ -95,7 +123,7 @@ public class MotoristaDAO extends BaseDAO {
 			ResultSet rs = pstmt.executeQuery();
 			Motorista motorista = null;
 			if(rs.next()) {
-				motorista = resultsetToUsuario(rs);
+				motorista = resultsetMotorista(rs);
 			}
 			rs.close();
 			return motorista;
@@ -107,7 +135,7 @@ public class MotoristaDAO extends BaseDAO {
 	}
 	
 	public static Motorista selectMotoristabyIdVeiculo(Long id) {
-		final String sql = "SELECT * FROM motoristas WHERE idVeiculo=?";
+		final String sql = "SELECT * FROM motoristas WHERE idVeiculo=? and situacao=?";
 		try
 		(
 			Connection conn = getConnection();
@@ -115,10 +143,11 @@ public class MotoristaDAO extends BaseDAO {
 		)
 		{
 			pstmt.setLong(1, id);	
+			pstmt.setBoolean(2, true);
 			ResultSet rs = pstmt.executeQuery();
 			Motorista motorista = null;
 			if(rs.next()) {
-				motorista = resultsetToUsuario(rs);
+				motorista = resultsetMotorista(rs);
 			}
 			rs.close();
 			return motorista;
@@ -171,57 +200,29 @@ public class MotoristaDAO extends BaseDAO {
 	}
 	
 	
-	public static int insertMotorista(Motorista motorista, Long idVeiculo) {
+	public static boolean insertMotorista(Motorista motorista) {
 		final String sql = "INSERT INTO motoristas (nome,email,telefone, situacao, idVeiculo) VALUES (?, ?, ?, ?, ?)";
-		final String sqlVeiculo = "select situacaoOcupado veiculos where idVeiculo=?";
-		final String sqlVeiculoSitu = "UPDATE veiculos SET situacaoOcupado=? WHERE idVeiculo=?";
+		
 		try
 		(
 			Connection conn = getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql);
-			PreparedStatement pstmtVeiculo = conn.prepareStatement(sqlVeiculo);
-		    PreparedStatement pstmtVeiculoSitu = conn.prepareStatement(sqlVeiculoSitu);
+			
 		)
 		{
-			
-			conn.setAutoCommit(false);
-			
-			pstmtVeiculo.setLong(1, idVeiculo);	
-			ResultSet rs = pstmtVeiculo.executeQuery();
-			Boolean  sitOcupado = null;
-			if(rs.next()) {
-				sitOcupado = rs.getBoolean("situacaoOcupado");
-			}
-			rs.close();
-			
-			int count = 0, count2 = 0, result = 0;
-			if(sitOcupado) {
+						
+			pstmt.setString(1, motorista.getNome());
+			pstmt.setString(2, motorista.getEmail());
+			pstmt.setString(3, motorista.getTelefone());
+			pstmt.setBoolean(4, motorista.getSituacao());
+			pstmt.setLong(5, motorista.getVeiculo().getId());
+			int count = pstmt.executeUpdate();
 				
-				pstmt.setString(1, motorista.getNome());
-				pstmt.setString(2, motorista.getEmail());
-				pstmt.setString(3, motorista.getTelefone());
-				pstmt.setBoolean(4, motorista.getSituacao());
-				pstmt.setLong(5, idVeiculo);
-				count = pstmt.executeUpdate();
-				
-				pstmtVeiculoSitu.setBoolean(1, true);
-				count2 = pstmtVeiculoSitu.executeUpdate();
-				if(count > 0  && count2 > 0) {
-					result = 2;
-				}
-				
-			}else {
-				result = 1;
-			}
-			
-			conn.commit();
-            conn.setAutoCommit(true);
-            
-            return result;
+            return count > 0;
 			
 		} catch(SQLException e) {
 			e.printStackTrace();
-			return 0;
+			return false;
 		}
 	} 
 	
@@ -230,7 +231,7 @@ public class MotoristaDAO extends BaseDAO {
 	// ------------------------------------------------------------------------------
 	
 	//método utilitário, converte ResultSet na classe de modelo (nesse caso, Motorista)
-	private static Motorista resultsetToUsuario(ResultSet rs) throws SQLException {
+	private static Motorista resultsetMotorista(ResultSet rs) throws SQLException {
 		Motorista m = new Motorista();
 		m.setId(rs.getLong("idMotorista"));
 		m.setNome(rs.getString("nome"));
@@ -239,7 +240,8 @@ public class MotoristaDAO extends BaseDAO {
 		m.setSituacao(rs.getBoolean("situacao"));
 		
 		Long idCarro =  rs.getLong("idVeiculo");
-		if(idCarro != 0L) {
+		System.out.println("idCarro" + idCarro);
+		if(idCarro != 0) {
 			Veiculo veiculo = VeiculoDAO.selectVeiculoById(idCarro);
 			m.setVeiculo(veiculo);
 		}

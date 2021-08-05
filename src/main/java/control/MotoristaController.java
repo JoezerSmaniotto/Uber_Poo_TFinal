@@ -7,6 +7,8 @@ import dao.MotoristaDAO;
 import model.Motorista;
 import dao.CorridaDAO;
 import model.Corrida;
+import dao.VeiculoDAO;
+import model.Veiculo;
 
 public class MotoristaController {
 
@@ -23,12 +25,13 @@ public class MotoristaController {
 			System.out.print(		
 				"\n1. Inserir novo motorista: " +
 				"\n2. Atualizar um motorista: " +
-				"\n3. Listar todos os motorista: " +
-				"\n4. Buscar motorista pelo código: " +
-				"\n5. Buscar motorista pelo nome: " +
+				"\n3. Listar todos os motorista ativos: " +
+				"\n4. Buscar motorista ativos pelo código: " +
+				"\n5. Buscar motorista ativos pelo nome: " +
 				"\n6. Buscar motorista pela situação: " +
-				"\n7. Deletar motorista pelo ID: " +
+				"\n7. Deletar motorista ativos pelo ID: " +
 				"\n8. Lista corridas do motorista pelo ID do Motora: " +
+				"\n9. Listar todos os motorista inativos: " +
 				"\nOpção (Zero p/sair): ");
 			opcao = input.nextInt();
 			input.nextLine();
@@ -57,6 +60,13 @@ public class MotoristaController {
 				case 8:
 					listaCorridasMotorista();
 					break;
+				case 9:
+					selectMotoristasInativos();
+					break;
+				
+					
+					
+					
 					
 				default:
 					if(opcao != 0) System.out.println("Opção inválida.");
@@ -74,17 +84,33 @@ public class MotoristaController {
         motorista.setEmail(input.nextLine());
         System.out.print("\nDigite o telefone do motorista: ");
         motorista.setTelefone(input.nextLine());
-        System.out.print("\nDigite o id do veículo: ");
-        Long idVeiculo = input.nextLong();
+        Veiculo veiculo = null;
+        int op = 10;
+        Long idVeiculo = null;
+        do {
+	        System.out.print("\nDigite o id do veículo: ");
+	        idVeiculo = input.nextLong();
+	    	veiculo = VeiculoDAO.selectVeiculoById(idVeiculo);
+	    	if(veiculo ==  null) {
+	    		System.out.println("Código não localizado.");
+	    	}else {
+	    		System.out.println("Tipo: " + veiculo.getTipo() );
+	    		System.out.print("Confirmar? (1-sim/0-não) ");
+	    		op =  input.nextInt();
+	    		input.nextLine();	    		
+	    	}
+            
+	        
+        }while(op != 1) ;	
+        
         motorista.setSituacao(true);
-        int resultado = MotoristaDAO.insertMotorista(motorista, idVeiculo);
-        if(resultado == 1) {
-        	System.out.println("\n Id do veículo informado já esta ocupado, esocolha outro carro !.");
-        }else if(resultado == 2){
-        	System.out.println("Motorista criado! ");
+        motorista.setVeiculo(veiculo);
+       
+        if(MotoristaDAO.insertMotorista(motorista)) {
+        	System.out.println("\nMotorista salvo com sucesso.");
         }else {
-        	System.out.println("\nHouve um erro ao salvar o usuário. Por favor, contate o administrador do sistema.");
-        }     
+        	System.out.println("\nHouve um erro ao salvar o motorista. Por favor, contate o administrador do sistema.");
+        }  
     }
 	
 	
@@ -169,7 +195,7 @@ public class MotoristaController {
 	
 	//opção 3
 	private static void selectMotoristas() {
-		System.out.println("\nLista de motoristas cadastrados no banco de dados:\n" + MotoristaDAO.selectMotoristas());
+		System.out.println("\nLista de motoristas ativos cadastrados no banco de dados:\n" + MotoristaDAO.selectMotoristas());
 	}
 	
 	//opção 4
@@ -248,6 +274,12 @@ public class MotoristaController {
         }
               
 	}
+	
+	//opção 9
+	private static void selectMotoristasInativos() {
+		System.out.println("\nLista de motoristas cadastrados no banco de dados:\n" + MotoristaDAO.selectMotoristasInativos());
+	}
+	
 	
 	
 }

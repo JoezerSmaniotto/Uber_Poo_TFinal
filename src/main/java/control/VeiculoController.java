@@ -22,14 +22,15 @@ public class VeiculoController {
 		do {
 			System.out.print("\n\"-------  MENU VEÍCULO -------\"");
 			System.out.print(		
-				"\n1. Inserir novo veículo" +
-				"\n2. Atualizar um veículo" +
-				"\n3. Listar todos os veiculos" +
-				"\n4. Buscar veículos pelo código" +
-				"\n5. Buscar veículos pelo nome" +
-				"\n6. Buscar veículos pela situação" +
-				"\n7. Deletar veículo pelo ID" +
-				"\n8. Listas o motorista associado ao veículo pelo ID do veículo" +
+				"\n1. Inserir novo veículo: " +
+				"\n2. Atualizar um veículo: " +
+				"\n3. Listar todos os veiculos ativos: " +
+				"\n4. Buscar veículos ativos pelo código: " +
+				"\n5. Buscar veículos ativos pelo nome: " +
+				"\n6. Buscar veículos pela situação: " +
+				"\n7. Deletar veículo ativos pelo ID: " +
+				"\n8. Listas o motorista associado ao veículo pelo ID do veículo:" +
+				"\n9. Listar todos os veiculos inativos: " +
 				"\nOpção (Zero p/sair): ");
 			opcao = input.nextInt();
 			input.nextLine();
@@ -56,7 +57,7 @@ public class VeiculoController {
 					softDeleteVeiculo();
 					break;
 				case 8:
-					selectMotoristaById();
+					selectMotoristasInativos();
 					break;
 					
 					
@@ -203,6 +204,13 @@ public class VeiculoController {
             System.out.println("Veículo sem motorista.");
         }
 	}
+	
+
+	//opção 9
+	private static void selectMotoristasInativos() {
+		System.out.println("\nLista de produtos cadastrados no banco de dados:\n" + VeiculoDAO.selectVeiculosInativos());
+	}
+	
 	
 	
 }

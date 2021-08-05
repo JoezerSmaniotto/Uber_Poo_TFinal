@@ -13,14 +13,15 @@ import dao.MotoristaDAO;
 public class CorridaDAO extends BaseDAO {
 	
 	public static List<Corrida> selectCorridas() {
-		final String sql = "SELECT * FROM corridas ORDER BY idCorrida";
+		final String sql = "SELECT * FROM corridas where situacao=? ORDER BY idCorrida";
 		try //try-witch-resource
 			(
 				Connection conn = getConnection();
 				PreparedStatement pstmt = conn.prepareStatement(sql);
-				ResultSet rs = pstmt.executeQuery();
 			)
 		{
+			pstmt.setBoolean(1, true);	
+			ResultSet rs = pstmt.executeQuery();
 			List<Corrida> corridas = new ArrayList<>();
 			while(rs.next()) {
 				corridas.add(resultsetToCorridas(rs));
@@ -34,7 +35,7 @@ public class CorridaDAO extends BaseDAO {
 	
 							
 	public static List<Corrida> selectMotoristasByTipoPag(String tipoPagamento) {
-		final String sql = "SELECT * FROM corridas WHERE tipoPagamento LIKE ? ORDER BY tipoPagamento";
+		final String sql = "SELECT * FROM corridas WHERE tipoPagamento LIKE ?  and situacao=? ORDER BY tipoPagamento";
 		try //try-witch-resource
 			(
 				Connection conn = getConnection();
@@ -42,6 +43,7 @@ public class CorridaDAO extends BaseDAO {
 			)
 		{
 			pstmt.setString(1, "%" + tipoPagamento.toLowerCase() + "%");	
+			pstmt.setBoolean(2, true);	
 			ResultSet rs = pstmt.executeQuery();
 			List<Corrida> corridas = new ArrayList<>();
 			while(rs.next()) {
@@ -77,6 +79,28 @@ public class CorridaDAO extends BaseDAO {
 	}
 	
 	
+	public static List<Corrida> selectCorridasInativas() {
+		final String sql = "SELECT * FROM corridas WHERE situacao=?";
+		try //try-witch-resource
+			(
+				Connection conn = getConnection();
+				PreparedStatement pstmt = conn.prepareStatement(sql);
+			)
+		{
+			pstmt.setBoolean(1, false);	
+			ResultSet rs = pstmt.executeQuery();
+			List<Corrida> corridas = new ArrayList<>();
+			while(rs.next()) {
+				corridas.add(resultsetToCorridas(rs));
+			}
+			return corridas;
+		} catch(SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
 	public static List<Corrida> selectCorridasIdMotorista(Long id) {
 		final String sql = "SELECT * FROM corridas WHERE idMotorista=?";
 		try //try-witch-resource
@@ -97,6 +121,10 @@ public class CorridaDAO extends BaseDAO {
 			return null;
 		}
 	}
+	
+	
+	
+	
 	
 	public static List<Corrida> selectCorridasIdUsuario(Long id) {
 		final String sql = "SELECT * FROM corridas WHERE idUser=?";
@@ -120,7 +148,7 @@ public class CorridaDAO extends BaseDAO {
 	}
 	
 	public static Corrida selectCorridabyId(Long id) {
-		final String sql = "SELECT * FROM corridas WHERE idCorrida=?";
+		final String sql = "SELECT * FROM corridas WHERE idCorrida=? and situacao=?";
 		try
 		(
 			Connection conn = getConnection();
@@ -128,6 +156,7 @@ public class CorridaDAO extends BaseDAO {
 		)
 		{
 			pstmt.setLong(1, id);	
+			pstmt.setBoolean(2, true);
 			ResultSet rs = pstmt.executeQuery();
 			Corrida corrida = null;
 			if(rs.next()) {
@@ -183,7 +212,7 @@ public class CorridaDAO extends BaseDAO {
 		}
 	} 
 	
-	public static boolean insertCorrida(Corrida corrida, Long idUser, Long idMotorista) {
+	public static boolean insertCorrida(Corrida corrida) {
 		final String sql = "INSERT INTO corridas (tipoPagamento,detalhesPagamento,dataInicio,preco,idUser,IdMotorista,situacao) VALUES (?, ?, ?, ?, ?, ?, ?)";
 		System.out.println();
 		try
@@ -196,8 +225,8 @@ public class CorridaDAO extends BaseDAO {
 			pstmt.setString(2, corrida.getDetalhesPagamento());
 			pstmt.setDate(3, new Date(new java.util.Date().getTime()));
 			pstmt.setDouble(4, corrida.getPreco());
-			pstmt.setLong(5, idUser);
-			pstmt.setLong(6, idMotorista);
+			pstmt.setLong(5, corrida.getUsuario().getId());
+			pstmt.setLong(6, corrida.getMotorista().getId());
 			pstmt.setBoolean(7, corrida.getSituacao());
 			int count = pstmt.executeUpdate();
 			return count > 0;

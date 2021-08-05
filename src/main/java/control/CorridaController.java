@@ -5,7 +5,10 @@ import java.util.Scanner;
 
 import dao.CorridaDAO;
 import model.Corrida;
-
+import dao.UsuarioDAO;
+import model.Usuario;
+import dao.MotoristaDAO;
+import model.Motorista;
 
 public class CorridaController {
 
@@ -20,13 +23,14 @@ public class CorridaController {
 		do {
 			System.out.print("\n\"-------  MENU Corrida -------\"");
 			System.out.print(		
-				"\n1. Inserir nova corrida" +
-				"\n2. Atualizar uma corrida" +
-				"\n3. Listar todas as corridas" +
-				"\n4. Buscar pelo código da corrida " +
-				"\n5. Buscar pelo tipo de pagamento corrida " +
-				"\n6. Buscar pela situação da corrida " +
-				"\n7. Deletar corrida pelo ID" +
+				"\n1. Inserir nova corrida:" +
+				"\n2. Atualizar uma corrida: " +
+				"\n3. Listar todas as corridas ativas: " +
+				"\n4. Buscar pelo código da corrida ativa: " +
+				"\n5. Buscar pelo tipo de pagamento corrida de ativas: " +
+				"\n6. Buscar pela situação da corrida: " +
+				"\n7. Deletar corrida pelo ID: " +
+				"\n8. Listas corridas Inativas: " +
 				"\nOpção (Zero p/sair): ");
 			opcao = input.nextInt();
 			input.nextLine();
@@ -52,6 +56,12 @@ public class CorridaController {
 				case 7:
 					softDeleteCorrida();
 					break;
+				case 8:
+					selectCorridasInativas();
+					break;
+					
+					
+					
 					
 				default:
 					if(opcao != 0) System.out.println("Opção inválida.");
@@ -69,13 +79,47 @@ public class CorridaController {
         corrida.setDetalhesPagamento(input.nextLine());
         System.out.print("\nDigite o preço da corrida: ");
         corrida.setPreco(input.nextDouble());
-        System.out.print("\nDigite o id do usuário: ");
-        Long idUser =  input.nextLong();
-        System.out.print("\nDigite o id do motorista: ");
-        Long idMotorista = input.nextLong();
-        corrida.setSituacao(true);
+        int op = 10;
+        Long idUser = null;
+        Usuario usuario = null;
+        do {
+        	System.out.print("\nDigite o id do usuário: ");
+        	idUser =  input.nextLong();
+        	usuario = UsuarioDAO.selectUsuariobyId(idUser);
+            if(usuario == null){
+                System.out.println("Código não localizado.");
+            }else {
+            	System.out.println("Nome: " + usuario.getNome());
+                System.out.print("Confirmar? (1-sim/0-não) ");
+                op =  input.nextInt();
+                input.nextLine();
+            }
+        	
+        }while(op!=1);
         
-        if(CorridaDAO.insertCorrida(corrida, idUser,idMotorista )) {
+        int op1 = 10;
+        Long idMotorista = null;
+        Motorista motorista = null;
+        do {
+        	
+	        System.out.print("\nDigite o id do motorista: ");
+	        idMotorista = input.nextLong();
+	        System.out.print("\nDigite o código do motorista ");
+			motorista = MotoristaDAO.selectMotoristabyId(idMotorista);
+			if(motorista == null){
+				System.out.println("Código não localizado.");
+	        }else {
+	        	System.out.println("Nome: " + motorista.getNome());
+                System.out.print("Confirmar? (1-sim/0-não) ");
+                op1 =  input.nextInt();
+                input.nextLine();
+	        }
+        }while(op1!=1);
+        
+        corrida.setSituacao(true);
+        corrida.setMotorista(motorista);
+        corrida.setUsuario(usuario);
+        if(CorridaDAO.insertCorrida(corrida)) {
         	System.out.println("\nCorrida salvo com sucesso.");
         }else {
         	System.out.println("\nHouve um erro ao salvar a corrida. Por favor, contate o administrador do sistema.");
@@ -217,8 +261,13 @@ public class CorridaController {
             }
            
     }
-		
+	
+	//opção 3
+	private static void selectCorridasInativas() {
+		System.out.println("\nLista de corridas cadastrados no banco de dados:\n" + CorridaDAO.selectCorridasInativas());
+	}
 
+		
 	
 	
 }
